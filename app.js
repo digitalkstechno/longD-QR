@@ -6,6 +6,8 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var mongoose = require('mongoose');
 var cors = require('cors');
+require('node:dns').setServers(['1.1.1.1','8.8.8.8'])
+
 var connectDB = require('./config/db');
 
 var authRouter = require('./routes/auth');
