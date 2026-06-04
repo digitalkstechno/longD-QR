@@ -3,17 +3,47 @@ const Notification = require('../models/Notification');
 const { Parser } = require('json2csv');
 
 // Helper to auto-expire tickets
-const checkAndExpireTickets = async () => {
+const checkAndExpireTickets = async (io) => {
   try {
     const now = new Date();
-    await Ticket.updateMany(
-      { status: { $in: ['Open', 'In Progress'] }, expiryAt: { $lt: now } },
-      { $set: { status: 'Expired' } }
+    const expiredTickets = await Ticket.find(
+      { status: { $in: ['Open', 'In Progress'] }, expiryAt: { $lt: now } }
     );
+
+    if (expiredTickets.length > 0) {
+      await Ticket.updateMany(
+        { _id: { $in: expiredTickets.map(t => t._id) } },
+        { $set: { status: 'Expired' } }
+      );
+
+      for (const ticket of expiredTickets) {
+        // Create notification
+        const notification = new Notification({
+          type: 'sla_warning',
+          title: 'Ticket SLA Timeout',
+          desc: `Ticket ${ticket.id} has timed out and requires admin attention.`,
+          icon: 'ShieldAlert',
+          color: 'danger',
+          link: `/admin/queries/${ticket.id}`
+        });
+        await notification.save();
+
+        if (io) {
+          io.emit('ticket_expired', {
+            id: ticket.id,
+            subject: ticket.subject,
+            customerName: ticket.customerName,
+            status: 'Expired'
+          });
+        }
+      }
+    }
   } catch (err) {
     console.error('Error expiring tickets:', err);
   }
 };
+
+exports.cronCheckAndExpireTickets = checkAndExpireTickets;
 
 exports.getTickets = async (req, res) => {
   try {
