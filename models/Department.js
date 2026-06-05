@@ -6,6 +6,12 @@ const departmentSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  slug: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  description: { type: String, default: '' },
   isActive: {
     type: Boolean,
     default: true

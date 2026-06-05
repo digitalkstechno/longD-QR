@@ -45,7 +45,7 @@ io.on('connection', (socket) => {
 // Run cron job every 60 seconds to check for expired tickets
 const ticketController = require('../controllers/ticketController');
 setInterval(() => {
-  ticketController.cronCheckAndExpireTickets(io);
+  ticketController.cronCheckAndEscalateTickets(io);
 }, 60 * 1000);
 
 /**

@@ -17,6 +17,11 @@ var ticketsRouter = require('./routes/tickets');
 var roleRoutes = require('./routes/roles');
 const settingsRoutes = require('./routes/settings');
 const notificationsRoutes = require('./routes/notifications');
+const qrCodesRouter = require('./routes/qrcodes');
+const categoriesRouter = require('./routes/categories');
+const categoryAssignmentsRouter = require('./routes/categoryassignments');
+const categorySupervisorsRouter = require('./routes/categorysupervisors');
+const categorySLAsRouter = require('./routes/categoryslas');
 
 var app = express();
 
@@ -41,6 +46,11 @@ app.use('/api/tickets', ticketsRouter);
 app.use('/api/roles', roleRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/qrcodes', qrCodesRouter);
+app.use('/api/categories', categoriesRouter);
+app.use('/api/categoryassignments', categoryAssignmentsRouter);
+app.use('/api/categorysupervisors', categorySupervisorsRouter);
+app.use('/api/categoryslas', categorySLAsRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
