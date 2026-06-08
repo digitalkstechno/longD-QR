@@ -26,7 +26,7 @@ const seed = async () => {
 
     // --- Create Departments ---
     const departments = await Department.create([
-      { name: 'Room Service', slug: 'room', description: 'Room service and amenities', isActive: true },
+      { name: 'Room Service', slug: 'room-service', description: 'Room service and amenities', isActive: true },
       { name: 'Restaurant', slug: 'restaurant', description: 'Restaurant and dining', isActive: true },
       { name: 'Reception', slug: 'reception', description: 'Front desk and check-in/check-out', isActive: true },
       { name: 'Housekeeping', slug: 'housekeeping', description: 'Room cleaning and maintenance', isActive: true }
@@ -96,7 +96,7 @@ const seed = async () => {
 
     console.log('✅ Seed data successfully created!');
     console.log('Test URLs:');
-    console.log('- /submit-query?room');
+    console.log('- /submit-query?room-service');
     console.log('- /submit-query?restaurant');
     console.log('- /submit-query?reception');
     console.log('Admin login: admin@example.com / admin123');
