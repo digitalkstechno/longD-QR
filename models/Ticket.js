@@ -22,15 +22,14 @@ const escalationSchema = new mongoose.Schema({
 
 const ticketSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
-  customerName: { type: String, required: true },
-  mobileNumber: { type: String, required: true },
+  customerName: { type: String },
+  mobileNumber: { type: String },
   email: { type: String },
   qrCodeId: { type: mongoose.Schema.Types.ObjectId, ref: 'QRCode' },
   departmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Department', required: true },
   categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
   description: { 
     type: String, 
-    required: true,
     get: decrypt,
     set: encrypt
   },
