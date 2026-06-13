@@ -56,6 +56,7 @@ const checkAndEscalateTickets = async (io) => {
       // Create notifications
       if (resolvedSupervisor?._id) {
         const supervisorNotif = new Notification({
+          userId: resolvedSupervisor._id,
           type: 'escalation',
           title: 'Ticket Escalated',
           desc: `Ticket ${ticket.id} has been escalated to you due to SLA timeout.`,
@@ -65,16 +66,6 @@ const checkAndEscalateTickets = async (io) => {
         });
         await supervisorNotif.save();
       }
-      
-      const adminNotif = new Notification({
-        type: 'escalation_admin',
-        title: 'Ticket Escalation',
-        desc: `Ticket ${ticket.id} has been escalated.`,
-        icon: 'ShieldAlert',
-        color: 'danger',
-        link: `/admin/queries/${ticket.id}`
-      });
-      await adminNotif.save();
       
       if (io) {
         io.emit('ticket_escalated', {
@@ -189,6 +180,31 @@ exports.getDashboardStats = async (req, res) => {
       .populate('categoryId')
       .populate('assignedStaffId');
 
+    // Chart Data (Last 7 Days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    const recentTicketsData = await Ticket.find({ createdAt: { $gte: sevenDaysAgo } }, 'createdAt status');
+
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const chartMap = {};
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(sevenDaysAgo);
+      d.setDate(d.getDate() + i);
+      chartMap[days[d.getDay()]] = { name: days[d.getDay()], queries: 0, resolved: 0 };
+    }
+
+    recentTicketsData.forEach(t => {
+      const dayName = days[t.createdAt.getDay()];
+      if (chartMap[dayName]) {
+        chartMap[dayName].queries += 1;
+        if (t.status === 'Resolved') chartMap[dayName].resolved += 1;
+      }
+    });
+
+    const chartData = Object.values(chartMap);
+
     res.json({
       total,
       open,
@@ -198,7 +214,8 @@ exports.getDashboardStats = async (req, res) => {
       escalated,
       deptStats,
       catStats,
-      recentTickets
+      recentTickets,
+      chartData
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
@@ -382,6 +399,7 @@ exports.createTicket = async (req, res) => {
     // Create notification for assigned staff
     if (assignment?.staffId) {
       const staffNotif = new Notification({
+        userId: assignment.staffId._id,
         type: 'new_ticket_assigned',
         title: 'New Ticket Assigned',
         desc: `New ticket ${ticket.id} has been assigned to you.`,
@@ -394,6 +412,7 @@ exports.createTicket = async (req, res) => {
 
     // Create notification for admin
     const notification = new Notification({
+      forAdmin: true,
       type: 'new_query',
       title: 'New Customer Query',
       desc: `New query ${ticket.id} received from ${ticket.customerName}.`,

@@ -1,7 +1,9 @@
 const mongoose = require('mongoose');
 
 const notificationSchema = new mongoose.Schema({
-  type: { type: String, required: true }, // e.g., 'new_query'
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  forAdmin: { type: Boolean, default: false },
+  type: { type: String, required: true },
   title: { type: String, required: true },
   desc: { type: String, required: true },
   isRead: { type: Boolean, default: false },

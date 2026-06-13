@@ -2,7 +2,14 @@ const Notification = require('../models/Notification');
 
 exports.getNotifications = async (req, res) => {
   try {
-    const notifications = await Notification.find().sort({ createdAt: -1 }).limit(50);
+    const user = req.user;
+    let query = {};
+    if (user.role?.name === 'Admin') {
+      query.forAdmin = true;
+    } else {
+      query.userId = user._id;
+    }
+    const notifications = await Notification.find(query).sort({ createdAt: -1 }).limit(50);
     res.json(notifications);
   } catch (error) {
     res.status(500).json({ message: 'Server error fetching notifications' });
@@ -21,7 +28,14 @@ exports.markAsRead = async (req, res) => {
 
 exports.markAllAsRead = async (req, res) => {
   try {
-    await Notification.updateMany({ isRead: false }, { isRead: true });
+    const user = req.user;
+    let query = { isRead: false };
+    if (user.role?.name === 'Admin') {
+      query.forAdmin = true;
+    } else {
+      query.userId = user._id;
+    }
+    await Notification.updateMany(query, { isRead: true });
     res.json({ message: 'All marked as read' });
   } catch (error) {
     res.status(400).json({ message: 'Error updating notifications' });

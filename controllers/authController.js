@@ -69,9 +69,7 @@ exports.login = async (req, res) => {
     const user = await User.findOne({ email }).populate('role');
     if (!user) return res.status(401).json({ message: 'Invalid credentials' });
     
-    // Check if active
-    if (!user.isActive) return res.status(403).json({ message: 'Account is locked' });
-
+    // Check if active removed as per user request
     // Compare password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });

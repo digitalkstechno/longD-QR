@@ -16,11 +16,7 @@ exports.protect = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecretjwtkey2026');
     const user = await User.findById(decoded.userId).populate('role').select('-password');
     if (!user) return res.status(401).json({ message: 'Not authorized' });
-    
-    if (!user.isActive) {
-      return res.status(403).json({ message: 'Account is locked' });
-    }
-
+    // Check if active removed as per user request
     req.user = user;
     next();
   } catch (err) {
