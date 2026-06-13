@@ -142,17 +142,34 @@ exports.getDashboardStats = async (req, res) => {
   try {
     await checkAndEscalateTickets();
     
+    const { period } = req.query;
+    let matchQuery = {};
+    if (period && period !== 'all') {
+      const now = new Date();
+      if (period === 'today') {
+        now.setHours(0,0,0,0);
+        matchQuery.createdAt = { $gte: now };
+      } else if (period === 'week') {
+        now.setDate(now.getDate() - 7);
+        matchQuery.createdAt = { $gte: now };
+      } else if (period === 'month') {
+        now.setMonth(now.getMonth() - 1);
+        matchQuery.createdAt = { $gte: now };
+      }
+    }
+
     const [total, open, inProgress, resolved, timeExpired, escalated] = await Promise.all([
-      Ticket.countDocuments(),
-      Ticket.countDocuments({ status: 'Open' }),
-      Ticket.countDocuments({ status: 'In Progress' }),
-      Ticket.countDocuments({ status: 'Resolved' }),
-      Ticket.countDocuments({ status: 'Time Expired' }),
-      Ticket.countDocuments({ status: 'Escalated' }),
+      Ticket.countDocuments(matchQuery),
+      Ticket.countDocuments({ ...matchQuery, status: 'Open' }),
+      Ticket.countDocuments({ ...matchQuery, status: 'In Progress' }),
+      Ticket.countDocuments({ ...matchQuery, status: 'Resolved' }),
+      Ticket.countDocuments({ ...matchQuery, status: 'Time Expired' }),
+      Ticket.countDocuments({ ...matchQuery, status: 'Escalated' }),
     ]);
     
     // Department-wise tickets
     const deptStats = await Ticket.aggregate([
+      { $match: matchQuery },
       {
         $group: {
           _id: '$departmentId',
@@ -163,6 +180,7 @@ exports.getDashboardStats = async (req, res) => {
     
     // Category-wise tickets
     const catStats = await Ticket.aggregate([
+      { $match: matchQuery },
       {
         $group: {
           _id: '$categoryId',
@@ -172,7 +190,7 @@ exports.getDashboardStats = async (req, res) => {
     ]);
     
     // Recent tickets
-    const recentTickets = await Ticket.find()
+    const recentTickets = await Ticket.find(matchQuery)
       .sort({ createdAt: -1 })
       .limit(10)
       .populate('qrCodeId')
